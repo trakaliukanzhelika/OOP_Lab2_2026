@@ -26,7 +26,7 @@ namespace Lab2.Strategies
             if (!string.IsNullOrWhiteSpace(keyword))
                 query = query.Where(e => ((string?)e.Attribute("FullName") ?? "").Contains(keyword));
 
-            return query.Select(ParseScientist).ToList();
+            return query.Select(e => ParseScientist(e)).ToList();
         }
 
         private static Scientist ParseScientist(XElement element)
@@ -42,7 +42,7 @@ namespace Lab2.Strategies
                 Department = (string?)element.Attribute("Department") ?? string.Empty,
                 Laboratory = (string?)element.Attribute("Laboratory"),
                 Position = (string?)element.Attribute("Position") ?? string.Empty,
-                StartDate = start != null ? DateTime.Parse(start, CultureInfo.InvariantCulture) : DateTime.MinValue,
+                StartDate = start != null ? DateTime.Parse(start, CultureInfo.InvariantCulture) : DateTime.MinValue, // Default if StartDate is not provided
                 EndDate = end != null ? DateTime.Parse(end, CultureInfo.InvariantCulture) : null
             };
         }
