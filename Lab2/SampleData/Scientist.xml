@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Staff>
+	<Scientist FullName="Коваленко Ігор Петрович" Faculty="Факультет комп'ютерних наук та кібернетики" Department="Кафедра теорії та технології програмування" Laboratory="Лабораторія програмних систем" Position="Доцент">
+		<Term Start="2015-09-01" />
+	</Scientist>
+	<Scientist FullName="Шевченко Олена Василівна" Faculty="Факультет комп'ютерних наук та кібернетики" Department="Кафедра інтелектуальних програмних систем" Position="Професор">
+		<Term Start="2010-09-01" />
+	</Scientist>
+	<Scientist FullName="Бондаренко Андрій Миколайович" Faculty="Факультет комп'ютерних наук та кібернетики" Department="Кафедра теорії та технології програмування" Laboratory="Лабораторія штучного інтелекту" Position="Молодший науковий співробітник">
+		<Term Start="2019-02-01" End="2023-06-30" />
+	</Scientist>
+	<Scientist FullName="Мельник Тетяна Олегівна" Faculty="Механіко-математичний факультет" Department="Кафедра алгебри та комп'ютерної математики" Position="Асистент">
+		<Term Start="2021-09-01" />
+	</Scientist>
+	<Scientist FullName="Ткаченко Сергій Іванович" Faculty="Механіко-математичний факультет" Department="Кафедра математичного аналізу" Laboratory="Лабораторія математичного моделювання" Position="Старший науковий співробітник">
+		<Term Start="2012-01-15" End="2020-12-31" />
+	</Scientist>
+	<Scientist FullName="Кравчук Наталія Андріївна" Faculty="Механіко-математичний факультет" Department="Кафедра алгебри та комп'ютерної математики" Position="Доцент">
+		<Term Start="2016-09-01" />
+	</Scientist>
+	<Scientist FullName="Олійник Дмитро Сергійович" Faculty="Фізичний факультет" Department="Кафедра теоретичної фізики" Laboratory="Лабораторія квантових систем" Position="Завідувач лабораторії">
+		<Term Start="2014-03-01" />
+	</Scientist>
+	<Scientist FullName="Поліщук Ірина Миколаївна" Faculty="Фізичний факультет" Department="Кафедра оптики" Position="Професор">
+		<Term Start="2008-09-01" End="2022-08-31" />
+	</Scientist>
+	<Scientist FullName="Лисенко Віктор Олександрович" Faculty="Фізичний факультет" Department="Кафедра теоретичної фізики" Laboratory="Лабораторія квантових систем" Position="Молодший науковий співробітник">
+		<Term Start="2022-10-01" />
+	</Scientist>
+	<Scientist FullName="Гончаренко Марія Ігорівна" Faculty="Факультет комп'ютерних наук та кібернетики" Department="Кафедра інтелектуальних програмних систем" Laboratory="Лабораторія штучного інтелекту" Position="Асистент">
+		<Term Start="2023-09-01" />
+	</Scientist>
+</Staff>
