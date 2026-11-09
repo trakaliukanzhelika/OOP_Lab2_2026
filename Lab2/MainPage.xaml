@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:models="clr-namespace:Lab2.Models"
@@ -7,10 +7,11 @@
 
     <Grid ColumnDefinitions="340,*" Padding="20" ColumnSpacing="20">
 
-        <!-- Ліва панель: параметри пошуку -->
+        <!-- Left panel: search parameters -->
         <ScrollView Grid.Column="0">
             <VerticalStackLayout Spacing="10">
                 <Button Text="Обрати XML-файл" Clicked="OnChooseFileClicked" />
+                <Button Text="Відкрити XML з Google Drive" Clicked="OnOpenFromDriveClicked" />
                 <Label x:Name="FileLabel" Text="Файл не обрано" />
 
                 <Label Text="Спосіб аналізу" FontAttributes="Bold" />
@@ -29,12 +30,15 @@
                 <Entry x:Name="KeywordEntry" Placeholder="Наприклад, Коваленко" />
 
                 <Button Text="Пошук" Clicked="OnSearchClicked" />
+                <Button Text="Трансформувати в HTML" Clicked="OnTransformClicked" />
+                <Button Text="Зберегти на Google Drive" Clicked="OnSaveToDriveClicked" />
                 <Button Text="Clear" Clicked="OnClearClicked" />
+                <Button Text="Відкрити протокол" Clicked="OnOpenLogClicked" />
                 <Button Text="Вихід" Clicked="OnExitClicked" />
             </VerticalStackLayout>
         </ScrollView>
 
-        <!-- Права панель: результати -->
+        <!-- Right panel: results -->
         <Grid Grid.Column="1" RowDefinitions="Auto,*" RowSpacing="10">
             <Label x:Name="ResultsLabel" Text="Результати" FontSize="18" FontAttributes="Bold" />
 
