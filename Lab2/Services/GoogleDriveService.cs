@@ -25,17 +25,26 @@ namespace Lab2.Services
             string json = $"{{\"installed\":{{\"client_id\":\"{Secrets.ClientId}\",\"client_secret\":\"{Secrets.ClientSecret}\"}}}}";
             using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(json));
 
-            // The token is stored locally, separately from Lab 1
             string tokenPath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "Lab2.GoogleDriveToken");
 
-            UserCredential credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-                GoogleClientSecrets.FromStream(stream).Secrets,
-                Scopes,
-                "user",
-                CancellationToken.None,
-                new FileDataStore(tokenPath, true));
+            using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+
+            UserCredential credential;
+            try
+            {
+                credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
+                    GoogleClientSecrets.FromStream(stream).Secrets,
+                    Scopes,
+                    "user",
+                    timeout.Token,
+                    new FileDataStore(tokenPath, true));
+            }
+            catch (OperationCanceledException)
+            {
+                throw new TimeoutException("Час на вхід у Google вичерпано. Спробуйте ще раз.");
+            }
 
             _service = new DriveService(new BaseClientService.Initializer
             {
@@ -103,7 +112,7 @@ namespace Lab2.Services
         private static void EnsureCompleted(IUploadProgress progress)
         {
             if (progress.Status != UploadStatus.Completed)
-                throw progress.Exception ?? new IOException("Не вдалося завантажити файл на Google Drive.");
+                throw progress.Exception ?? new InvalidOperationException("Не вдалося завантажити файл на Google Drive.");
         }
 
         private static string GetMimeType(string fileName)

@@ -33,7 +33,15 @@ namespace Lab2.Logging
 
             lock (_lock)
             {
-                File.AppendAllText(_logFilePath, line + Environment.NewLine);
+                try
+                {
+                    File.AppendAllText(_logFilePath, line + Environment.NewLine);
+                }
+                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+                {
+                    // Logging must never crash the application
+                    System.Diagnostics.Debug.WriteLine($"Log write failed: {ex.Message}");
+                }
             }
         }
 

@@ -1,5 +1,8 @@
+using Google;
+using Google.Apis.Auth.OAuth2.Responses;
 using System.Xml;
 using System.Xml.Linq;
+using System.Xml.XPath;
 using System.Xml.Xsl;
 using Lab2.Exporters;
 using Lab2.Logging;
@@ -28,7 +31,7 @@ namespace Lab2
             StrategyPicker.SelectedIndex = 1;
         }
 
-        // ---------- XML file selection ----------
+        // XML file selection 
 
         private async void OnChooseFileClicked(object? sender, EventArgs e)
         {
@@ -48,7 +51,8 @@ namespace Lab2
             }
             catch (Exception ex)
             {
-                await DisplayAlertAsync("Помилка Google Drive", ex.Message, "OK");
+                await DisplayAlertAsync("Помилка Google Drive",
+                    $"Не вдалося отримати файл з Google Drive: {DescribeDriveError(ex)}.", "OK");
                 return;
             }
 
@@ -65,12 +69,19 @@ namespace Lab2
                 _xmlPath = path;
                 FileLabel.Text = displayName;
                 LoadAttributeValues();
+
+                // Results of the previous file are no longer valid
+                ClearResults();
             }
-            catch (XmlException ex)
+            catch (Exception ex) when (ex is XmlException || ex is IOException || ex is UnauthorizedAccessException)
             {
                 _xmlPath = null;
                 FileLabel.Text = "Файл не обрано";
-                await DisplayAlertAsync("Помилка", $"Некоректний XML-файл: {ex.Message}", "OK");
+                FacultyPicker.ItemsSource = null;
+                DepartmentPicker.ItemsSource = null;
+                PositionPicker.ItemsSource = null;
+                ClearResults();
+                await DisplayAlertAsync("Помилка", $"Не вдалося відкрити XML-файл: {DescribeError(ex)}.", "OK");
             }
         }
 
@@ -98,7 +109,7 @@ namespace Lab2
             return values;
         }
 
-        // ---------- Search ----------
+        // Search 
 
         private async void OnSearchClicked(object? sender, EventArgs e)
         {
@@ -118,7 +129,17 @@ namespace Lab2
                 Keyword = KeywordEntry.Text?.Trim()
             };
 
-            _results = _searchContext.ExecuteSearch(_xmlPath, criteria);
+            try
+            {
+                _results = _searchContext.ExecuteSearch(_xmlPath, criteria);
+            }
+            catch (Exception ex) when (ex is XmlException || ex is XPathException || ex is FormatException
+                                       || ex is IOException || ex is UnauthorizedAccessException)
+            {
+                ClearResults();
+                await DisplayAlertAsync("Помилка", $"Не вдалося виконати пошук: {DescribeError(ex)}.", "OK");
+                return;
+            }
 
             Logger.Instance.Log(LogLevel.Filtering,
                 $"Спосіб: {StrategyPicker.SelectedItem}. Параметри: {DescribeCriteria(criteria)}. Знайдено: {_results.Count}");
@@ -173,7 +194,7 @@ namespace Lab2
             ResultsLabel.Text = $"Результати ({_results.Count})";
         }
 
-        // ---------- XSL transformation to HTML ----------
+        // XSL transformation to HTML 
 
         private async void OnTransformClicked(object? sender, EventArgs e)
         {
@@ -198,7 +219,8 @@ namespace Lab2
             }
             catch (Exception ex)
             {
-                await DisplayAlertAsync("Помилка Google Drive", ex.Message, "OK");
+                await DisplayAlertAsync("Помилка Google Drive",
+                    $"Не вдалося отримати XSL-файл з Google Drive: {DescribeDriveError(ex)}.", "OK");
                 return;
             }
 
@@ -212,9 +234,10 @@ namespace Lab2
                 _transformer.Transform(_xmlPath, xslPath, htmlPath);
                 Logger.Instance.Log(LogLevel.Transformation, $"Збережено у файл {Path.GetFileName(htmlPath)}");
             }
-            catch (Exception ex) when (ex is XsltException || ex is XmlException || ex is IOException)
+            catch (Exception ex) when (ex is XsltException || ex is XmlException || ex is IOException
+                                       || ex is UnauthorizedAccessException)
             {
-                await DisplayAlertAsync("Помилка", $"Не вдалося виконати трансформацію: {ex.Message}", "OK");
+                await DisplayAlertAsync("Помилка", $"Не вдалося виконати трансформацію: {DescribeError(ex)}.", "OK");
                 return;
             }
 
@@ -225,7 +248,7 @@ namespace Lab2
                 await Launcher.Default.OpenAsync(new OpenFileRequest("HTML", new ReadOnlyFile(htmlPath)));
         }
 
-        // ---------- Saving to Google Drive ----------
+        // Saving to Google Drive 
 
         private async void OnSaveToDriveClicked(object? sender, EventArgs e)
         {
@@ -244,6 +267,12 @@ namespace Lab2
             if (string.IsNullOrWhiteSpace(name))
                 return;
 
+            if (name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+            {
+                await DisplayAlertAsync("Збереження", "Назва файлу містить недопустимі символи (\\ / : * ? \" < > |).", "OK");
+                return;
+            }
+
             string fileName = $"{name.Trim()}.{format.ToLowerInvariant()}";
 
             FragmentExporter exporter = format == "XML"
@@ -259,11 +288,11 @@ namespace Lab2
             }
             catch (Exception ex)
             {
-                await DisplayAlertAsync("Помилка Google Drive", $"Не вдалося зберегти файл: {ex.Message}", "OK");
+                await DisplayAlertAsync("Помилка Google Drive", $"Не вдалося зберегти файл: {DescribeDriveError(ex)}.", "OK");
             }
         }
 
-        // ---------- File helper methods ----------
+        // File helper methods 
 
         private static async Task<string?> PickLocalFileAsync(string title, params string[] extensions)
         {
@@ -303,7 +332,33 @@ namespace Lab2
             return localPath;
         }
 
-        // ---------- Clear, log, exit ----------
+        private static string DescribeError(Exception ex)
+        {
+            return ex switch
+            {
+                XmlException xml => $"файл не є коректним XML (рядок {xml.LineNumber}, позиція {xml.LinePosition})",
+                XsltException => "XSL-файл містить помилку і не може бути застосований",
+                XPathException => "некоректний пошуковий запит",
+                FormatException => "у файлі є некоректна дата (очікується формат РРРР-ММ-ДД)",
+                FileNotFoundException or DirectoryNotFoundException => "файл не знайдено (можливо, його переміщено або видалено)",
+                UnauthorizedAccessException => "немає доступу до файлу або папки",
+                IOException => "файл недоступний (можливо, він відкритий в іншій програмі)",
+                _ => "сталася непередбачена помилка"
+            };
+        }
+
+        private static string DescribeDriveError(Exception ex)
+        {
+            return ex switch
+            {
+                TimeoutException => "час на вхід у Google вичерпано, спробуйте ще раз",
+                TokenResponseException => "вхід у Google не виконано або доступ не надано",
+                HttpRequestException => "немає з'єднання з інтернетом або Google Drive недоступний",
+                GoogleApiException api => $"Google Drive відхилив запит (код {(int)api.HttpStatusCode})",
+                IOException or UnauthorizedAccessException => DescribeError(ex),
+                _ => "не вдалося виконати операцію з Google Drive"
+            };
+        }
 
         private void OnClearClicked(object? sender, EventArgs e)
         {
@@ -312,6 +367,11 @@ namespace Lab2
             PositionPicker.SelectedIndex = -1;
             KeywordEntry.Text = string.Empty;
 
+            ClearResults();
+        }
+
+        private void ClearResults()
+        {
             _results = new List<Scientist>();
             ResultsView.ItemsSource = null;
             ResultsLabel.Text = "Результати";
